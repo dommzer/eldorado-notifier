@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0a0f">
+  <meta name="theme-color" content="#0d1520">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Eldorado Orders</title>
@@ -13,25 +13,25 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --bg2: #111118;
-      --bg3: #1a1a24;
-      --border: rgba(255,255,255,0.06);
-      --accent: #00e5a0;
-      --accent2: #7c6af7;
-      --gold: #f5c842;
-      --text: #f0f0f5;
-      --muted: rgba(240,240,245,0.45);
-      --danger: #ff4f6a;
+      --bg: #0d1520;
+      --bg2: #111e2e;
+      --bg3: #172638;
+      --border: rgba(160,210,255,0.08);
+      --accent: #7dd3fc;
+      --accent2: #a5b4fc;
+      --gold: #e0f2fe;
+      --text: #e8f4fd;
+      --muted: rgba(180,220,255,0.45);
+      --danger: #f472b6;
       --card-radius: 16px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overflow-x: hidden; }
+    html, body { height: 100%; background: var(--bg); background-image: radial-gradient(ellipse at top left, rgba(56,120,180,0.12) 0%, transparent 60%); color: var(--text); font-family: 'Syne', sans-serif; overflow-x: hidden; }
 
     /* ── HEADER ── */
     .header {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(10,10,15,0.85);
+      background: rgba(13,21,32,0.90);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
@@ -39,6 +39,7 @@
       display: flex; align-items: center; justify-content: space-between;
     }
     .header-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 12px rgba(125,211,252,0.3); }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
     .header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
@@ -150,7 +151,7 @@
     /* ── BOTTOM NAV ── */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(10,10,15,0.92); backdrop-filter: blur(20px);
+      background: rgba(13,21,32,0.95); backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
       display: flex; padding: 10px 0 max(10px, env(safe-area-inset-bottom));
@@ -180,7 +181,7 @@
 
 <div class="header">
   <div class="header-logo">
-    <div class="logo-dot"></div>
+    <img src="https://i.imgur.com/Uo15bC1.png" class="logo-icon" alt="logo">
     <h1>Eldorado Orders</h1>
   </div>
   <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()">
@@ -341,7 +342,7 @@
     const rCtx = document.getElementById("revenueChart").getContext("2d");
     revenueChart = new Chart(rCtx, {
       type: "bar",
-      data: { labels: [], datasets: [{ data: [], backgroundColor: "rgba(0,229,160,0.25)", borderColor: "#00e5a0", borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
+      data: { labels: [], datasets: [{ data: [], backgroundColor: "rgba(125,211,252,0.18)", borderColor: "#7dd3fc", borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
@@ -355,7 +356,7 @@
     const gCtx = document.getElementById("gamesChart").getContext("2d");
     gamesChart = new Chart(gCtx, {
       type: "doughnut",
-      data: { labels: [], datasets: [{ data: [], backgroundColor: ["#00e5a0","#7c6af7","#f5c842","#ff4f6a","#38bdf8"], borderWidth: 0, hoverOffset: 4 }] },
+      data: { labels: [], datasets: [{ data: [], backgroundColor: ["#7dd3fc","#a5b4fc","#e0f2fe","#f472b6","#38bdf8"], borderWidth: 0, hoverOffset: 4 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: "70%" }
     });
   }
@@ -405,7 +406,7 @@
       gameMap[g] = (gameMap[g] || 0) + parsePrice(o.price);
     });
     const sorted = Object.entries(gameMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const colors = ["#00e5a0","#7c6af7","#f5c842","#ff4f6a","#38bdf8"];
+    const colors = ["#7dd3fc","#a5b4fc","#e0f2fe","#f472b6","#38bdf8"];
 
     gamesChart.data.labels = sorted.map(s=>s[0]);
     gamesChart.data.datasets[0].data = sorted.map(s=>s[1]);
