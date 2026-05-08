@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Eldorado Orders</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a24;
+      --border: rgba(255,255,255,0.06);
+      --accent: #00e5a0;
+      --accent2: #7c6af7;
+      --gold: #f5c842;
+      --text: #f0f0f5;
+      --muted: rgba(240,240,245,0.45);
+      --danger: #ff4f6a;
+      --card-radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overflow-x: hidden; }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+    .header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .notif-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--muted); font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 600; padding: 7px 12px;
+      border-radius: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .notif-btn.active { color: var(--accent); border-color: rgba(0,229,160,0.3); background: rgba(0,229,160,0.08); }
+    .notif-btn svg { width: 14px; height: 14px; }
+
+    /* ── MAIN SCROLL ── */
+    .main { padding: 0 0 100px; }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 4px; padding: 16px 20px 0; }
+    .tab {
+      flex: 1; text-align: center; padding: 9px 0;
+      font-size: 13px; font-weight: 600; border-radius: 10px;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--muted); background: transparent;
+      border: 1px solid transparent;
+    }
+    .tab.active { color: var(--text); background: var(--bg3); border-color: var(--border); }
+
+    .tab-content { display: none; animation: fadeIn 0.25s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── STAT CARDS ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 20px 0; }
+    .stat-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-radius); padding: 16px;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--accent), transparent); }
+    .stat-card.purple::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .stat-card.gold::before { background: linear-gradient(90deg, var(--gold), transparent); }
+    .stat-card.red::before { background: linear-gradient(90deg, var(--danger), transparent); }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .stat-value.green { color: var(--accent); }
+    .stat-value.purple { color: var(--accent2); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+
+    /* ── CHART ── */
+    .chart-card {
+      margin: 12px 20px 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-radius); padding: 16px;
+    }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .chart-title { font-size: 13px; font-weight: 700; }
+    .chart-period-btns { display: flex; gap: 4px; }
+    .period-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 6px; cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-family: 'Syne', sans-serif;
+      transition: all 0.15s;
+    }
+    .period-btn.active { background: var(--bg3); color: var(--text); border-color: rgba(255,255,255,0.12); }
+    .chart-wrap { position: relative; height: 160px; }
+
+    /* ── GAMES PIE ── */
+    .games-card {
+      margin: 12px 20px 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-radius); padding: 16px;
+    }
+    .games-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .games-wrap { display: flex; align-items: center; gap: 16px; }
+    .pie-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+    .games-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .legend-name { font-size: 12px; color: var(--muted); flex: 1; }
+    .legend-val { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    /* ── ORDERS LIST ── */
+    .orders-list { padding: 16px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+    .order-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-radius); padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.2s;
+    }
+    .order-card:active { border-color: rgba(0,229,160,0.3); }
+    .order-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: var(--bg3); display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .order-info { flex: 1; min-width: 0; }
+    .order-game { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-meta { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+    .order-price { font-size: 15px; font-weight: 800; color: var(--accent); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,0.92); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex; padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 4px; cursor: pointer; padding: 4px 0;
+      color: var(--muted); font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 22px; height: 22px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-10px);
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 18px;
+      font-size: 13px; font-weight: 600; color: var(--text);
+      opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-dot"></div>
+    <h1>Eldorado Orders</h1>
+  </div>
+  <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+    <span id="notifLabel">Attiva</span>
+  </button>
+</div>
+
+<div class="main">
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+    <div class="tab" onclick="switchTab('ordini')">Ordini</div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div class="tab-content active" id="tab-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">Oggi</div>
+        <div class="stat-value green" id="stat-today">$0</div>
+        <div class="stat-sub" id="stat-today-count">0 ordini</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Questo mese</div>
+        <div class="stat-value purple" id="stat-month">$0</div>
+        <div class="stat-sub" id="stat-month-count">0 ordini</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-label">Totale</div>
+        <div class="stat-value gold" id="stat-total">$0</div>
+        <div class="stat-sub" id="stat-total-count">0 ordini</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Ordine più alto</div>
+        <div class="stat-value" id="stat-best" style="color:var(--danger)">$0</div>
+        <div class="stat-sub" id="stat-best-game">—</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Entrate</span>
+        <div class="chart-period-btns">
+          <button class="period-btn active" onclick="setPeriod('7d', this)">7G</button>
+          <button class="period-btn" onclick="setPeriod('30d', this)">30G</button>
+          <button class="period-btn" onclick="setPeriod('all', this)">Tutto</button>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+    </div>
+
+    <div class="games-card">
+      <div class="games-title">Giochi più venduti</div>
+      <div class="games-wrap">
+        <div class="pie-wrap"><canvas id="gamesChart"></canvas></div>
+        <div class="games-legend" id="gamesLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDINI TAB -->
+  <div class="tab-content" id="tab-ordini">
+    <div class="orders-list" id="ordersList">
+      <div class="empty-state">
+        <div class="emoji">📦</div>
+        <p>Nessun ordine ancora</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let allOrders = [];
+  let revenueChart, gamesChart;
+  let currentPeriod = '7d';
+  const GAME_ICONS = { "Roblox":"🎮","World of Warcraft":"⚔️","Fortnite":"🎯","Minecraft":"⛏️","FIFA":"⚽","League of Legends":"🧙","default":"🕹️" };
+
+  // ── INIT ────────────────────────────────────────────────────
+  async function init() {
+    await loadOrders();
+    setupCharts();
+    checkNotifStatus();
+    // Auto-refresh every 30 seconds
+    setInterval(loadOrders, 30000);
+  }
+
+  async function loadOrders() {
+    try {
+      const res = await fetch("/api/orders");
+      allOrders = await res.json();
+      renderStats();
+      renderOrders();
+      updateCharts();
+    } catch(e) { console.error("Load error:", e); }
+  }
+
+  // ── STATS ───────────────────────────────────────────────────
+  function parsePrice(p) {
+    if (!p || p === "N/A") return 0;
+    return parseFloat(p.replace(/[^0-9.]/g, "")) || 0;
+  }
+
+  function renderStats() {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString("it-IT");
+    const thisMonth = now.getMonth() + "-" + now.getFullYear();
+
+    let todayTotal=0, todayCount=0, monthTotal=0, monthCount=0, grandTotal=0, bestVal=0, bestGame="—";
+
+    allOrders.forEach(o => {
+      const val = parsePrice(o.price);
+      const oDate = new Date(o.receivedAt);
+      grandTotal += val;
+      if (val > bestVal) { bestVal = val; bestGame = o.game || "—"; }
+      if (oDate.toLocaleDateString("it-IT") === todayStr) { todayTotal += val; todayCount++; }
+      if ((oDate.getMonth()+"-"+oDate.getFullYear()) === thisMonth) { monthTotal += val; monthCount++; }
+    });
+
+    document.getElementById("stat-today").textContent = "$" + todayTotal.toFixed(2);
+    document.getElementById("stat-today-count").textContent = todayCount + " ordini";
+    document.getElementById("stat-month").textContent = "$" + monthTotal.toFixed(2);
+    document.getElementById("stat-month-count").textContent = monthCount + " ordini";
+    document.getElementById("stat-total").textContent = "$" + grandTotal.toFixed(2);
+    document.getElementById("stat-total-count").textContent = allOrders.length + " ordini";
+    document.getElementById("stat-best").textContent = "$" + bestVal.toFixed(2);
+    document.getElementById("stat-best-game").textContent = bestGame;
+  }
+
+  // ── ORDERS LIST ─────────────────────────────────────────────
+  function renderOrders() {
+    const list = document.getElementById("ordersList");
+    if (!allOrders.length) {
+      list.innerHTML = `<div class="empty-state"><div class="emoji">📦</div><p>Nessun ordine ancora</p></div>`;
+      return;
+    }
+    list.innerHTML = allOrders.map(o => {
+      const icon = GAME_ICONS[o.game] || GAME_ICONS.default;
+      const date = new Date(o.receivedAt).toLocaleDateString("it-IT", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+      return `
+        <div class="order-card">
+          <div class="order-icon">${icon}</div>
+          <div class="order-info">
+            <div class="order-game">${o.game || "—"}</div>
+            <div class="order-meta">${o.shortId || ""} · ${date}</div>
+          </div>
+          <div class="order-price">${o.price || "N/A"}</div>
+        </div>`;
+    }).join("");
+  }
+
+  // ── CHARTS ──────────────────────────────────────────────────
+  function setupCharts() {
+    const rCtx = document.getElementById("revenueChart").getContext("2d");
+    revenueChart = new Chart(rCtx, {
+      type: "bar",
+      data: { labels: [], datasets: [{ data: [], backgroundColor: "rgba(0,229,160,0.25)", borderColor: "#00e5a0", borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "rgba(240,240,245,0.45)", font: { family: "JetBrains Mono", size: 10 } } },
+          y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "rgba(240,240,245,0.45)", font: { family: "JetBrains Mono", size: 10 }, callback: v => "$"+v } }
+        }
+      }
+    });
+
+    const gCtx = document.getElementById("gamesChart").getContext("2d");
+    gamesChart = new Chart(gCtx, {
+      type: "doughnut",
+      data: { labels: [], datasets: [{ data: [], backgroundColor: ["#00e5a0","#7c6af7","#f5c842","#ff4f6a","#38bdf8"], borderWidth: 0, hoverOffset: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: "70%" }
+    });
+  }
+
+  function getFilteredOrders(period) {
+    const now = new Date();
+    return allOrders.filter(o => {
+      if (period === "all") return true;
+      const d = new Date(o.receivedAt);
+      const days = period === "7d" ? 7 : 30;
+      return (now - d) < days * 86400000;
+    });
+  }
+
+  function updateCharts() {
+    updateRevenueChart(currentPeriod);
+    updateGamesChart();
+  }
+
+  function updateRevenueChart(period) {
+    const orders = getFilteredOrders(period);
+    const days = period === "7d" ? 7 : period === "30d" ? 30 : null;
+    const map = {};
+
+    if (days) {
+      for (let i = days-1; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate()-i);
+        const key = d.toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit" });
+        map[key] = 0;
+      }
+    }
+
+    orders.forEach(o => {
+      const key = new Date(o.receivedAt).toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit" });
+      map[key] = (map[key] || 0) + parsePrice(o.price);
+    });
+
+    revenueChart.data.labels = Object.keys(map);
+    revenueChart.data.datasets[0].data = Object.values(map);
+    revenueChart.update();
+  }
+
+  function updateGamesChart() {
+    const gameMap = {};
+    allOrders.forEach(o => {
+      const g = o.game || "Altro";
+      gameMap[g] = (gameMap[g] || 0) + parsePrice(o.price);
+    });
+    const sorted = Object.entries(gameMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const colors = ["#00e5a0","#7c6af7","#f5c842","#ff4f6a","#38bdf8"];
+
+    gamesChart.data.labels = sorted.map(s=>s[0]);
+    gamesChart.data.datasets[0].data = sorted.map(s=>s[1]);
+    gamesChart.update();
+
+    document.getElementById("gamesLegend").innerHTML = sorted.map((s,i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${colors[i]}"></div>
+        <div class="legend-name">${s[0]}</div>
+        <div class="legend-val">$${s[1].toFixed(0)}</div>
+      </div>`).join("");
+  }
+
+  function setPeriod(period, btn) {
+    currentPeriod = period;
+    document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateRevenueChart(period);
+  }
+
+  // ── TABS ────────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", ["dashboard","ordini"][i] === tab));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById("tab-"+tab).classList.add("active");
+  }
+
+  // ── NOTIFICATIONS ───────────────────────────────────────────
+  function checkNotifStatus() {
+    if (Notification.permission === "granted") {
+      document.getElementById("notifBtn").classList.add("active");
+      document.getElementById("notifLabel").textContent = "Attive";
+    }
+  }
+
+  async function toggleNotifications() {
+    if (Notification.permission === "granted") { showToast("🔔 Notifiche già attive!"); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { showToast("❌ Permesso negato"); return; }
+
+    const reg = await navigator.serviceWorker.ready;
+    const keyRes = await fetch("/api/vapid-public");
+    const { key } = await keyRes.json();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key)
+    });
+
+    await fetch("/api/subscribe", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(sub) });
+    document.getElementById("notifBtn").classList.add("active");
+    document.getElementById("notifLabel").textContent = "Attive";
+    showToast("✅ Notifiche attivate!");
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+  }
+
+  // ── SERVICE WORKER ──────────────────────────────────────────
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(console.error);
+  }
+
+  init();
+</script>
+</body>
+</html>
